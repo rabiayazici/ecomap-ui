@@ -143,18 +143,19 @@ function DashboardPage() {
       {/* Header */}
       <header className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-          <div className="text-2xl font-bold text-green-600">EcoMap</div>
-          <nav className="flex items-center space-x-4">
-            <button className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors">
-              Plan Route
-            </button>
+          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+          <div className="flex items-center space-x-4">
+            <span className="text-gray-600">Welcome, {user?.name}</span>
             <button
-              onClick={logout}
-              className="w-10 h-10 rounded-full bg-green-600 text-white flex items-center justify-center font-semibold hover:bg-green-700 transition-colors"
+              onClick={() => {
+                logout();
+                navigate('/login');
+              }}
+              className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors"
             >
-              {user?.name ? user.name.charAt(0).toUpperCase() : 'R'}
+              Logout
             </button>
-          </nav>
+          </div>
         </div>
       </header>
 

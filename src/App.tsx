@@ -4,6 +4,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import DashboardPage from './pages/DashboardPage';
 import RoutePlanningPage from './pages/RoutePlanningPage';
+import EcomapLandingPage from './pages/EcomapLandingPage';
 import './App.css';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
@@ -17,6 +18,7 @@ function App() {
       <AuthProvider>
         <Routes>
           {/* Public routes */}
+          <Route path="/" element={<EcomapLandingPage />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           
@@ -37,9 +39,6 @@ function App() {
               </PrivateRoute>
             }
           />
-          
-          {/* Redirect root based on authentication */}
-          <Route path="/" element={<Navigate to="/dashboard" />} />
         </Routes>
       </AuthProvider>
     </Router>
