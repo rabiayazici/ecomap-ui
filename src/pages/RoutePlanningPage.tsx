@@ -274,19 +274,7 @@ function RoutePlanningPage() {
   };
 
   const handleSaveRoute = async () => {
-    if (!route || !selectedCar) return;
-
-    try {
-      await routeService.createRoute({
-        startCoordinate: route.startCoordinate,
-        endCoordinate: route.endCoordinate,
-        carId: selectedCar
-      });
-
-      navigate('/dashboard');
-    } catch (err) {
-      setError('Failed to save route');
-    }
+    setError('Route saving is temporarily disabled');
   };
 
   return (
