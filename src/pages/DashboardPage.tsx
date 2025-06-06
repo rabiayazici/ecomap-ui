@@ -19,7 +19,6 @@ function DashboardPage() {
   const [loadingRoutes, setLoadingRoutes] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCar, setEditingCar] = useState<Car | null>(null);
   const [formData, setFormData] = useState({
     name: '',
@@ -81,7 +80,6 @@ function DashboardPage() {
       } else {
         await carService.createCar(carData);
       }
-      setIsModalOpen(false);
       setEditingCar(null);
       setFormData({
         name: '',
@@ -105,7 +103,15 @@ function DashboardPage() {
       model: car.model,
       fuelConsumption: car.fuelConsumption.toString(),
     });
-    setIsModalOpen(true);
+  };
+
+  const handleCancel = () => {
+    setEditingCar(null);
+    setFormData({
+      name: '',
+      model: '',
+      fuelConsumption: '',
+    });
   };
 
   const handleDelete = async (carId: string) => {
@@ -192,25 +198,63 @@ function DashboardPage() {
               <span className="ml-auto text-sm text-gray-500">{cars.length} vehicles</span>
             </div>
             <div className="space-y-4">
-              {cars.length === 0 ? (
-                <div className="text-center py-4">
-                  <p className="text-gray-600 mb-4">No vehicles added yet.</p>
+              {/* Add/Edit Vehicle Form */}
+              <form onSubmit={handleSubmit} className="bg-gray-50 p-4 rounded-md space-y-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Name</label>
+                  <input
+                    type="text"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Model</label>
+                  <input
+                    type="text"
+                    name="model"
+                    value={formData.model}
+                    onChange={handleInputChange}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Fuel Consumption (L/100km)</label>
+                  <input
+                    type="number"
+                    name="fuelConsumption"
+                    value={formData.fuelConsumption}
+                    onChange={handleInputChange}
+                    step="0.1"
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
+                    required
+                  />
+                </div>
+                <div className="flex justify-end space-x-2">
+                  {editingCar && (
+                    <button
+                      type="button"
+                      onClick={handleCancel}
+                      className="px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+                    >
+                      Cancel
+                    </button>
+                  )}
                   <button
-                    onClick={() => {
-                      setEditingCar(null);
-                      setFormData({
-                        name: '',
-                        model: '',
-                        fuelConsumption: '',
-                      });
-                      setIsModalOpen(true);
-                    }}
-                    className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors"
+                    type="submit"
+                    className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
                   >
-                    Add Your First Vehicle
+                    {editingCar ? 'Save Changes' : 'Add Vehicle'}
                   </button>
                 </div>
-              ) : (
+              </form>
+
+              {/* Vehicle List */}
+              {cars.length > 0 && (
                 <div className="space-y-3">
                   {cars.map(car => (
                     <div key={car.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-md">
@@ -234,20 +278,6 @@ function DashboardPage() {
                       </div>
                     </div>
                   ))}
-                  <button
-                    onClick={() => {
-                      setEditingCar(null);
-                      setFormData({
-                        name: '',
-                        model: '',
-                        fuelConsumption: '',
-                      });
-                      setIsModalOpen(true);
-                    }}
-                    className="w-full bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors"
-                  >
-                    + Add Vehicle
-                  </button>
                 </div>
               )}
             </div>
@@ -277,68 +307,6 @@ function DashboardPage() {
           </div>
         </div>
       </div>
-
-      {/* Edit/Add Vehicle Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h2 className="text-xl font-bold mb-4">
-              {editingCar ? 'Edit Vehicle' : 'Add New Vehicle'}
-            </h2>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Name</label>
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Model</label>
-                <input
-                  type="text"
-                  name="model"
-                  value={formData.model}
-                  onChange={handleInputChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Fuel Consumption (L/100km)</label>
-                <input
-                  type="number"
-                  name="fuelConsumption"
-                  value={formData.fuelConsumption}
-                  onChange={handleInputChange}
-                  step="0.1"
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
-                  required
-                />
-              </div>
-              <div className="flex justify-end space-x-2 mt-6">
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
-                >
-                  {editingCar ? 'Save Changes' : 'Add Vehicle'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
