@@ -5,6 +5,7 @@ import Register from './pages/Register';
 import DashboardPage from './pages/DashboardPage';
 import RoutePlanningPage from './pages/RoutePlanningPage';
 import EcomapLandingPage from './pages/EcomapLandingPage';
+import SatelliteRoutePage from './pages/SatelliteRoutePage';
 import './App.css';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
@@ -36,6 +37,14 @@ function App() {
             element={
               <PrivateRoute>
                 <RoutePlanningPage />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/satellite-route"
+            element={
+              <PrivateRoute>
+                <SatelliteRoutePage />
               </PrivateRoute>
             }
           />
