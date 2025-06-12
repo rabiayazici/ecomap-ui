@@ -24,6 +24,12 @@ function DashboardPage() {
   const [formData, setFormData] = useState({
     name: '',
     model: '',
+    engine_type: '',
+    year: '',
+    fuel_type: '',
+    engine_displacement: '',
+    transmission: '',
+    drive_type: '',
     fuelConsumption: '',
   });
 
@@ -73,6 +79,8 @@ function DashboardPage() {
     try {
       const carData = {
         ...formData,
+        year: parseInt(formData.year),
+        engine_displacement: parseFloat(formData.engine_displacement),
         fuelConsumption: parseFloat(formData.fuelConsumption)
       };
 
@@ -86,6 +94,12 @@ function DashboardPage() {
       setFormData({
         name: '',
         model: '',
+        engine_type: '',
+        year: '',
+        fuel_type: '',
+        engine_displacement: '',
+        transmission: '',
+        drive_type: '',
         fuelConsumption: '',
       });
       // Refresh the cars list
@@ -103,6 +117,12 @@ function DashboardPage() {
     setFormData({
       name: car.name,
       model: car.model,
+      engine_type: car.engine_type,
+      year: car.year.toString(),
+      fuel_type: car.fuel_type,
+      engine_displacement: car.engine_displacement.toString(),
+      transmission: car.transmission,
+      drive_type: car.drive_type,
       fuelConsumption: car.fuelConsumption.toString(),
     });
     setIsModalOpen(true);
@@ -201,6 +221,12 @@ function DashboardPage() {
                       setFormData({
                         name: '',
                         model: '',
+                        engine_type: '',
+                        year: '',
+                        fuel_type: '',
+                        engine_displacement: '',
+                        transmission: '',
+                        drive_type: '',
                         fuelConsumption: '',
                       });
                       setIsModalOpen(true);
@@ -216,7 +242,13 @@ function DashboardPage() {
                     <div key={car.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-md">
                       <div className="flex-1">
                         <div className="font-medium text-gray-900">{car.name}</div>
-                        <div className="text-sm text-gray-600">{car.model} - {car.fuelConsumption} L/100km</div>
+                        <div className="text-sm text-gray-600">
+                          {car.model} ({car.year}) - {car.engine_type} {car.engine_displacement}L
+                          <br />
+                          {car.transmission} • {car.drive_type} • {car.fuel_type}
+                          <br />
+                          Fuel Consumption: {car.fuelConsumption} L/100km
+                        </div>
                       </div>
                       <div className="flex space-x-2">
                         <button
@@ -240,6 +272,12 @@ function DashboardPage() {
                       setFormData({
                         name: '',
                         model: '',
+                        engine_type: '',
+                        year: '',
+                        fuel_type: '',
+                        engine_displacement: '',
+                        transmission: '',
+                        drive_type: '',
                         fuelConsumption: '',
                       });
                       setIsModalOpen(true);
@@ -323,6 +361,75 @@ function DashboardPage() {
                   type="text"
                   name="model"
                   value={formData.model}
+                  onChange={handleInputChange}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Engine Type</label>
+                <input
+                  type="text"
+                  name="engine_type"
+                  value={formData.engine_type}
+                  onChange={handleInputChange}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Year</label>
+                <input
+                  type="number"
+                  name="year"
+                  value={formData.year}
+                  onChange={handleInputChange}
+                  min="1900"
+                  max={new Date().getFullYear()}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Fuel Type</label>
+                <input
+                  type="text"
+                  name="fuel_type"
+                  value={formData.fuel_type}
+                  onChange={handleInputChange}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Engine Displacement (L)</label>
+                <input
+                  type="number"
+                  name="engine_displacement"
+                  value={formData.engine_displacement}
+                  onChange={handleInputChange}
+                  step="0.1"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Transmission</label>
+                <input
+                  type="text"
+                  name="transmission"
+                  value={formData.transmission}
+                  onChange={handleInputChange}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Drive Type</label>
+                <input
+                  type="text"
+                  name="drive_type"
+                  value={formData.drive_type}
                   onChange={handleInputChange}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
                   required
