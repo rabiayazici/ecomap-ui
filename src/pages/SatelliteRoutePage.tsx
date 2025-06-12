@@ -4,6 +4,7 @@ const SatelliteRoutePage: React.FC = () => {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [startPoint, setStartPoint] = useState<{ x: number; y: number } | null>(null);
   const [endPoint, setEndPoint] = useState<{ x: number; y: number } | null>(null);
+  const [originalImageSize, setOriginalImageSize] = useState<{ width: number; height: number } | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
   const [loading, setLoading] = useState<boolean>(false);
@@ -93,11 +94,18 @@ const SatelliteRoutePage: React.FC = () => {
   };
 
   const handleCanvasClick = (event: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!canvasRef.current) return;
+    if (!canvasRef.current || !originalImageSize) return;
 
-    const rect = canvasRef.current.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
+    const canvas = canvasRef.current;
+    const rect = canvas.getBoundingClientRect();
+    
+    // Get click coordinates relative to canvas
+    const canvasX = event.clientX - rect.left;
+    const canvasY = event.clientY - rect.top;
+    
+    // Convert to original image coordinates
+    const x = (canvasX / canvas.width) * originalImageSize.width;
+    const y = (canvasY / canvas.height) * originalImageSize.height;
 
     if (!startPoint) {
       setStartPoint({ x, y });
@@ -115,14 +123,16 @@ const SatelliteRoutePage: React.FC = () => {
 
     const image = new Image();
     image.onload = () => {
+      // Store original image dimensions
+      setOriginalImageSize({ width: image.width, height: image.height });
+      
       // Set canvas size to match image size while maintaining aspect ratio
-      const maxWidth = window.innerWidth * 0.9; // 90% of window width
-      const maxHeight = window.innerHeight * 0.7; // 70% of window height
+      const maxWidth = window.innerWidth * 0.9;
+      const maxHeight = window.innerHeight * 0.7;
       
       let width = image.width;
       let height = image.height;
       
-      // Scale down if image is too large
       if (width > maxWidth) {
         const ratio = maxWidth / width;
         width = maxWidth;
@@ -144,31 +154,28 @@ const SatelliteRoutePage: React.FC = () => {
 
       // Draw points if they exist
       if (startPoint) {
+        const scaledStartX = (startPoint.x / image.width) * width;
+        const scaledStartY = (startPoint.y / image.height) * height;
         ctx.beginPath();
-        ctx.arc(startPoint.x, startPoint.y, 5, 0, 2 * Math.PI);
+        ctx.arc(scaledStartX, scaledStartY, 5, 0, 2 * Math.PI);
         ctx.fillStyle = 'red';
         ctx.fill();
       }
 
       if (endPoint) {
+        const scaledEndX = (endPoint.x / image.width) * width;
+        const scaledEndY = (endPoint.y / image.height) * height;
         ctx.beginPath();
-        ctx.arc(endPoint.x, endPoint.y, 5, 0, 2 * Math.PI);
+        ctx.arc(scaledEndX, scaledEndY, 5, 0, 2 * Math.PI);
         ctx.fillStyle = 'yellow';
         ctx.fill();
       }
     };
 
-    image.onerror = () => {
-      setError('Failed to load image');
-      setLoading(false);
-    };
-
     image.src = selectedImage;
 
-    // Cleanup function
     return () => {
       image.onload = null;
-      image.onerror = null;
     };
   }, [selectedImage, startPoint, endPoint]);
 
@@ -179,7 +186,7 @@ const SatelliteRoutePage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedImage || !startPoint || !endPoint) {
+    if (!selectedImage || !startPoint || !endPoint || !originalImageSize) {
       setError('Please select both start and end points');
       return;
     }
@@ -195,7 +202,8 @@ const SatelliteRoutePage: React.FC = () => {
         body: JSON.stringify({
           image: selectedImage,
           start: startPoint,
-          end: endPoint
+          end: endPoint,
+          imageSize: originalImageSize
         })
       });
 
@@ -205,48 +213,51 @@ const SatelliteRoutePage: React.FC = () => {
         throw new Error(data.error || 'Failed to calculate route');
       }
 
-      // Canvas üzerine yolu çiz
       const canvas = canvasRef.current;
       if (canvas && data.path) {
         const ctx = canvas.getContext('2d');
         if (ctx) {
-          // Mevcut görüntüyü temizle ve yeniden çiz
           const image = new Image();
           image.src = data.displayImage || selectedImage;
           image.onload = () => {
-            canvas.width = image.width;
-            canvas.height = image.height;
-            ctx.drawImage(image, 0, 0);
+            // Clear and draw the image
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
 
-            // Yolu çiz
+            // Draw the path
             ctx.beginPath();
             ctx.strokeStyle = 'lime';
             ctx.lineWidth = 3;
             
-            const path = data.path;
-            if (path.length > 0) {
-              ctx.moveTo(path[0].x, path[0].y);
-              for (let i = 1; i < path.length; i++) {
-                ctx.lineTo(path[i].x, path[i].y);
+            if (data.path.length > 0) {
+              const scaleX = canvas.width / originalImageSize.width;
+              const scaleY = canvas.height / originalImageSize.height;
+
+              ctx.moveTo(data.path[0].x * scaleX, data.path[0].y * scaleY);
+              for (let i = 1; i < data.path.length; i++) {
+                ctx.lineTo(data.path[i].x * scaleX, data.path[i].y * scaleY);
               }
               ctx.stroke();
             }
 
-            // Başlangıç noktasını çiz (kırmızı)
+            // Draw start point
+            const scaledStartX = (startPoint.x / originalImageSize.width) * canvas.width;
+            const scaledStartY = (startPoint.y / originalImageSize.height) * canvas.height;
             ctx.beginPath();
-            ctx.arc(startPoint.x, startPoint.y, 5, 0, 2 * Math.PI);
+            ctx.arc(scaledStartX, scaledStartY, 5, 0, 2 * Math.PI);
             ctx.fillStyle = 'red';
             ctx.fill();
 
-            // Bitiş noktasını çiz (sarı)
+            // Draw end point
+            const scaledEndX = (endPoint.x / originalImageSize.width) * canvas.width;
+            const scaledEndY = (endPoint.y / originalImageSize.height) * canvas.height;
             ctx.beginPath();
-            ctx.arc(endPoint.x, endPoint.y, 5, 0, 2 * Math.PI);
+            ctx.arc(scaledEndX, scaledEndY, 5, 0, 2 * Math.PI);
             ctx.fillStyle = 'yellow';
             ctx.fill();
           };
         }
       }
-
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to calculate route');
     } finally {
@@ -295,10 +306,19 @@ const SatelliteRoutePage: React.FC = () => {
               {startPoint && !endPoint && <p>Click to set destination point</p>}
               <button
                 onClick={handleReset}
-                className="mt-2 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+                className="mt-2 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 mr-2"
               >
                 Reset Navigation
               </button>
+              {startPoint && endPoint && (
+                <button
+                  onClick={handleSubmit}
+                  className="mt-2 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+                  disabled={loading}
+                >
+                  {loading ? 'Calculating...' : 'Calculate Route'}
+                </button>
+              )}
             </div>
           </>
         ) : (
