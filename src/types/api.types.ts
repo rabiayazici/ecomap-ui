@@ -24,6 +24,12 @@ export interface Car {
   id: string;
   name: string;
   model: string;
+  engine_type: string;
+  year: number;
+  fuel_type: string;
+  engine_displacement: number;
+  transmission: string;
+  drive_type: string;
   fuelConsumption: number;
   userId: number;
 }
@@ -31,6 +37,12 @@ export interface Car {
 export interface CreateCarData {
   name: string;
   model: string;
+  engine_type: string;
+  year: number;
+  fuel_type: string;
+  engine_displacement: number;
+  transmission: string;
+  drive_type: string;
   fuelConsumption: number;
 }
 

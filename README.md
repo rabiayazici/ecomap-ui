@@ -1,80 +1,71 @@
-# Ecomap UI
+# Satellite Route Planning Application
 
-A modern web application for interactive mapping and route visualization built with React, TypeScript, and Mapbox GL.
+Bu uygulama, uydu görüntüleri üzerinde yol tespiti yaparak en uygun rotayı hesaplayan ve gerçek zamanlı navigasyon sağlayan bir web uygulamasıdır.
 
-## Features
+## Özellikler
 
-- Interactive map visualization using Mapbox GL
-- Route planning and polyline encoding/decoding
-- Modern UI with Tailwind CSS
-- Type-safe development with TypeScript
-- Fast development with Vite
+- Uydu görüntüsü yükleme ve görüntüleme
+- Yapay zeka ile yol tespiti (UNet modeli)
+- Başlangıç ve hedef noktası seçimi
+- Otomatik rota hesaplama (A* algoritması)
+- Gerçek zamanlı navigasyon (ok tuşları ile kontrol)
+- Yön ve mesafe bilgisi gösterimi
 
-## Prerequisites
+## Kurulum
 
-- Node.js (Latest LTS version recommended)
-- npm or yarn package manager
+### Backend (Python)
 
-## Getting Started
-
-1. Clone the repository:
+1. Python bağımlılıklarını yükleyin:
 ```bash
-git clone [repository-url]
-cd ecomap-ui
+pip install -r requirements.txt
 ```
 
-2. Install dependencies:
+2. Flask uygulamasını başlatın:
+```bash
+python app.py
+```
+
+### Frontend (React)
+
+1. Proje dizinine gidin:
+```bash
+cd ecomap-ui-main
+```
+
+2. Node.js bağımlılıklarını yükleyin:
 ```bash
 npm install
-# or
-yarn install
 ```
 
-3. Start the development server:
+3. Geliştirme sunucusunu başlatın:
 ```bash
-npm run dev
-# or
-yarn dev
+npm start
 ```
 
-The application will be available at `http://localhost:5173` by default.
+## Kullanım
 
-## Available Scripts
+1. Web tarayıcınızda `http://localhost:3000` adresine gidin
+2. "Upload Satellite Image" butonuna tıklayarak bir uydu görüntüsü yükleyin
+3. Görüntü üzerinde tıklayarak başlangıç noktasını (kırmızı) belirleyin
+4. İkinci kez tıklayarak hedef noktasını (sarı) belirleyin
+5. Sistem otomatik olarak en uygun rotayı hesaplayacak ve yeşil çizgi ile gösterecektir
+6. Ok tuşlarını kullanarak başlangıç noktasını hareket ettirebilirsiniz
+7. Ekranın üst kısmında mevcut yön ve mesafe bilgisini görebilirsiniz
 
-- `npm run dev` - Start the development server
-- `npm run build` - Build the application for production
-- `npm run lint` - Run ESLint to check code quality
-- `npm run preview` - Preview the production build locally
+## Teknik Detaylar
 
-## Tech Stack
+- Backend: Python (Flask)
+  - UNet modeli ile yol tespiti
+  - NetworkX ile graf tabanlı rota hesaplama
+  - OpenCV ile görüntü işleme
+  - RESTful API
 
-- **Frontend Framework**: React 19
-- **Build Tool**: Vite
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS
-- **Mapping**: Mapbox GL
-- **Routing**: React Router DOM
-- **HTTP Client**: Axios
-- **Code Quality**: ESLint, TypeScript ESLint
+- Frontend: React
+  - Canvas API ile görüntü manipülasyonu
+  - Gerçek zamanlı kullanıcı etkileşimi
+  - Responsive tasarım
+  - Modern UI/UX
 
-## Project Structure
+## Lisans
 
-```
-ecomap-ui/
-├── src/           # Source files
-├── public/        # Static assets
-├── index.html     # Entry HTML file
-└── vite.config.ts # Vite configuration
-```
-
-## Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
+MIT
