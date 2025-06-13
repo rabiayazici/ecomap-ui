@@ -2,6 +2,9 @@ import api from './api.config';
 import type { Route, CreateRouteData, CalculateRouteRequest } from '../types/api.types';
 import polyline from '@mapbox/polyline';
 
+// Remove the direct Python API URL since we'll proxy through Spring Boot
+// const PYTHON_API_URL = 'http://localhost:5000';
+
 export const routeService = {
   getUserRoutes: async (userId: number): Promise<Route[]> => {
     const response = await api.get(`/routes/user/${userId}`);
@@ -53,69 +56,67 @@ export const routeService = {
 
       console.log('Coordinates:', { startCoord, endCoord });
 
-      // Calculate the route using the calculate-route endpoint
-      const routeRequest = {
-        coordinates: [
-          [startCoord[0], startCoord[1]], // Ensure coordinates are in [lon, lat] format
-          [endCoord[0], endCoord[1]]
-        ]
-      };
-
-      console.log('Sending route calculation request:', routeRequest);
-
-      const routeResponse = await api.post('/routes/calculate-route', routeRequest);
-      const routeData = routeResponse.data;
-      
-      console.log('Route calculation response:', routeData);
-
-      // Check if we have a valid route response
-      if (!routeData || typeof routeData !== 'object') {
-        console.error('Invalid route response:', routeData);
-        throw new Error('Invalid route response from server');
-      }
-
-      // Try to extract route information from the response
-      let distance = 0;
-      let duration = 0;
-      let coordinates: [number, number][] = [];
-
-      if (routeData.routes?.[0]) {
-        const route = routeData.routes[0];
-        // Decode the polyline and convert to [lon, lat] format for Mapbox
-        coordinates = polyline.decode(route.geometry).map((coord: [number, number]) => [coord[1], coord[0]]);
-        distance = route.distance || 0;
-        duration = route.duration || 0;
-      }
-
-      if (coordinates.length === 0) {
-        console.error('No route coordinates found:', routeData);
-        throw new Error('No route coordinates found in response');
-      }
-
-      // Get the car's fuel consumption
+      // Get the car's data for eco-route calculation
       const carResponse = await api.get(`/cars/${request.carId}`);
       const car = carResponse.data;
       
       console.log('Car data:', car);
 
-      // Calculate fuel cost (assuming fuel price of $1.5 per liter)
-      const fuelPrice = 1.5;
-      const fuelConsumption = car.fuelConsumption; // L/100km
-      const distanceInKm = distance / 1000;
-      const fuelUsed = (fuelConsumption * distanceInKm) / 100;
-      const fuelCost = fuelUsed * fuelPrice;
+      // Calculate eco-route using Spring Boot backend
+      const ecoRouteRequest = {
+        startLat: startCoord[1],
+        startLon: startCoord[0],
+        endLat: endCoord[1],
+        endLon: endCoord[0],
+        vehicleType: car.type || 'medium',
+        fuelType: car.fuelType || 'petrol',
+        weight: car.weight || 1500,
+        year: car.year || 2020
+      };
 
-      // Return the route data without creating it in the database
+      console.log('Sending eco-route calculation request:', ecoRouteRequest);
+
+      const ecoRouteResponse = await api.post('/routes/calculate-eco-route', ecoRouteRequest);
+      
+      if (!ecoRouteResponse.data) {
+        throw new Error('Failed to calculate eco-route');
+      }
+
+      const ecoRouteData = ecoRouteResponse.data;
+      console.log('Eco-route calculation response:', ecoRouteData);
+
+      // Calculate distances and durations
+      const shortestDistance = calculateDistance(ecoRouteData.shortest_route.coordinates);
+      const ecoDistance = calculateDistance(ecoRouteData.eco_route.coordinates);
+      
+      // Estimate durations (assuming average speed of 50 km/h)
+      const averageSpeed = 50; // km/h
+      const shortestDuration = (shortestDistance / 1000) / averageSpeed * 3600; // seconds
+      const ecoDuration = (ecoDistance / 1000) / averageSpeed * 3600; // seconds
+
+      // Calculate fuel costs
+      const fuelPrice = 1.5; // $ per liter
+      const fuelConsumption = car.fuelConsumption; // L/100km
+      const shortestFuelCost = (fuelConsumption * shortestDistance / 1000 / 100) * fuelPrice;
+      const ecoFuelCost = shortestFuelCost * 0.85; // Assuming 15% fuel savings
+
+      // Return both routes
       return {
         id: 'temp-route',
         startCoordinate: startCoord as [number, number],
         endCoordinate: endCoord as [number, number],
-        distance,
-        duration,
-        fuelCost,
-        coordinates,
+        distance: ecoDistance,
+        duration: ecoDuration,
+        fuelCost: ecoFuelCost,
+        coordinates: ecoRouteData.eco_route.coordinates,
+        alternativeRoute: {
+          coordinates: ecoRouteData.shortest_route.coordinates,
+          distance: shortestDistance,
+          duration: shortestDuration,
+          fuelCost: shortestFuelCost
+        },
         carId: request.carId,
-        userId: 0 // Temporary value since we're not creating the route
+        userId: 0
       };
     } catch (error) {
       console.error('Error calculating route:', error);
@@ -125,4 +126,30 @@ export const routeService = {
       throw new Error('Failed to calculate route');
     }
   }
-}; 
+};
+
+// Helper function to calculate distance between coordinates
+function calculateDistance(coordinates: [number, number][]): number {
+  let distance = 0;
+  for (let i = 1; i < coordinates.length; i++) {
+    const [lon1, lat1] = coordinates[i - 1];
+    const [lon2, lat2] = coordinates[i];
+    distance += getDistanceFromLatLonInMeters(lat1, lon1, lat2, lon2);
+  }
+  return distance;
+}
+
+function getDistanceFromLatLonInMeters(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371e3; // Earth's radius in meters
+  const φ1 = lat1 * Math.PI / 180;
+  const φ2 = lat2 * Math.PI / 180;
+  const Δφ = (lat2 - lat1) * Math.PI / 180;
+  const Δλ = (lon2 - lon1) * Math.PI / 180;
+
+  const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+    Math.cos(φ1) * Math.cos(φ2) *
+    Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+  return R * c;
+} 

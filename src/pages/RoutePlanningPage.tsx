@@ -16,6 +16,19 @@ interface LocationSuggestion {
   center: [number, number];
 }
 
+interface RouteDetails {
+  distance: number;
+  duration: number;
+  fuelCost: number;
+}
+
+interface AlternativeRoute {
+  coordinates: [number, number][];
+  distance: number;
+  duration: number;
+  fuelCost: number;
+}
+
 function RoutePlanningPage() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
@@ -28,11 +41,9 @@ function RoutePlanningPage() {
   const [route, setRoute] = useState<Route | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [routeDetails, setRouteDetails] = useState<{
-    distance: number;
-    duration: number;
-    fuelCost: number;
-  } | null>(null);
+  const [routeDetails, setRouteDetails] = useState<RouteDetails | null>(null);
+  const [alternativeRoute, setAlternativeRoute] = useState<AlternativeRoute | null>(null);
+  const [showAlternativeRoute, setShowAlternativeRoute] = useState(false);
 
   // Add state for suggestions
   const [startSuggestions, setStartSuggestions] = useState<LocationSuggestion[]>([]);
@@ -168,22 +179,25 @@ function RoutePlanningPage() {
       });
 
       setRoute(result);
+      setAlternativeRoute(result.alternativeRoute || null);
       setRouteDetails({
         distance: result.distance,
         duration: result.duration,
         fuelCost: result.fuelCost
       });
 
-      // Draw route on map
+      // Draw routes on map
       if (map.current) {
-        // Remove existing route if any
-        if (map.current.getSource('route')) {
-          map.current.removeLayer('route');
-          map.current.removeSource('route');
-        }
+        // Remove existing routes if any
+        ['eco-route', 'shortest-route'].forEach(id => {
+          if (map.current?.getSource(id)) {
+            map.current.removeLayer(id);
+            map.current.removeSource(id);
+          }
+        });
 
-        // Add new route
-        map.current.addSource('route', {
+        // Add eco route
+        map.current.addSource('eco-route', {
           type: 'geojson',
           data: {
             type: 'Feature',
@@ -196,80 +210,76 @@ function RoutePlanningPage() {
         });
 
         map.current.addLayer({
-          id: 'route',
+          id: 'eco-route',
           type: 'line',
-          source: 'route',
+          source: 'eco-route',
           layout: {
             'line-join': 'round',
             'line-cap': 'round'
           },
           paint: {
-            'line-color': '#4ade80',
-            'line-width': 4
+            'line-color': '#2ecc71',
+            'line-width': 4,
+            'line-opacity': 0.8
           }
         });
 
-        // Add markers for start and end points
-        if (map.current.getSource('points')) {
-          map.current.removeLayer('points');
-          map.current.removeSource('points');
+        // Add shortest route if available
+        if (result.alternativeRoute) {
+          map.current.addSource('shortest-route', {
+            type: 'geojson',
+            data: {
+              type: 'Feature',
+              properties: {},
+              geometry: {
+                type: 'LineString',
+                coordinates: result.alternativeRoute.coordinates
+              }
+            }
+          });
+
+          map.current.addLayer({
+            id: 'shortest-route',
+            type: 'line',
+            source: 'shortest-route',
+            layout: {
+              'line-join': 'round',
+              'line-cap': 'round',
+              'visibility': showAlternativeRoute ? 'visible' : 'none'
+            },
+            paint: {
+              'line-color': '#e74c3c',
+              'line-width': 4,
+              'line-opacity': 0.8
+            }
+          });
         }
 
-        map.current.addSource('points', {
-          type: 'geojson',
-          data: {
-            type: 'FeatureCollection',
-            features: [
-              {
-                type: 'Feature',
-                properties: { type: 'start' },
-                geometry: {
-                  type: 'Point',
-                  coordinates: result.startCoordinate
-                }
-              },
-              {
-                type: 'Feature',
-                properties: { type: 'end' },
-                geometry: {
-                  type: 'Point',
-                  coordinates: result.endCoordinate
-                }
-              }
-            ]
-          }
-        });
-
-        map.current.addLayer({
-          id: 'points',
-          type: 'circle',
-          source: 'points',
-          paint: {
-            'circle-radius': 8,
-            'circle-color': [
-              'match',
-              ['get', 'type'],
-              'start', '#4ade80',
-              'end', '#ef4444',
-              '#000000'
-            ]
-          }
-        });
-
-        // Fit map to route bounds
-        const bounds = result.coordinates.reduce((bounds: any, coord: number[]) => {
-          return bounds.extend(coord);
-        }, new mapboxgl.LngLatBounds(result.coordinates[0], result.coordinates[0]));
-
-        map.current.fitBounds(bounds, {
-          padding: 50
-        });
+        // Fit map to show both routes
+        const bounds = new mapboxgl.LngLatBounds();
+        result.coordinates.forEach(coord => bounds.extend(coord as [number, number]));
+        if (result.alternativeRoute) {
+          result.alternativeRoute.coordinates.forEach(coord => bounds.extend(coord as [number, number]));
+        }
+        map.current.fitBounds(bounds, { padding: 50 });
       }
+
     } catch (err) {
       console.error('Error calculating route:', err);
-      setError('Failed to calculate route. Please check your input and try again.');
+      setError(err instanceof Error ? err.message : 'Failed to calculate route');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const toggleAlternativeRoute = () => {
+    setShowAlternativeRoute(!showAlternativeRoute);
+    if (map.current && map.current.getLayer('shortest-route')) {
+      map.current.setLayoutProperty(
+        'shortest-route',
+        'visibility',
+        !showAlternativeRoute ? 'visible' : 'none'
+      );
     }
   };
 
@@ -436,6 +446,33 @@ function RoutePlanningPage() {
             </div>
           </div>
         </div>
+
+        {/* Add route comparison section */}
+        {route && alternativeRoute && (
+          <div className="route-comparison">
+            <h3>Route Comparison</h3>
+            <div className="route-types">
+              <div className="eco-route">
+                <h4>Eco-friendly Route</h4>
+                <p>Distance: {(route.distance / 1000).toFixed(1)} km</p>
+                <p>Duration: {Math.round(route.duration / 60)} minutes</p>
+                <p>Fuel Cost: ${route.fuelCost.toFixed(2)}</p>
+              </div>
+              <div className="shortest-route">
+                <h4>Shortest Route</h4>
+                <p>Distance: {(alternativeRoute.distance / 1000).toFixed(1)} km</p>
+                <p>Duration: {Math.round(alternativeRoute.duration / 60)} minutes</p>
+                <p>Fuel Cost: ${alternativeRoute.fuelCost.toFixed(2)}</p>
+              </div>
+            </div>
+            <button 
+              className="toggle-route-btn"
+              onClick={toggleAlternativeRoute}
+            >
+              {showAlternativeRoute ? 'Hide' : 'Show'} Shortest Route
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

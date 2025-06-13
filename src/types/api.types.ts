@@ -46,6 +46,13 @@ export interface CreateCarData {
   fuelConsumption: number;
 }
 
+export interface AlternativeRoute {
+  coordinates: [number, number][];
+  distance: number;
+  duration: number;
+  fuelCost: number;
+}
+
 export interface Route {
   id: string;
   startCoordinate: [number, number];
@@ -56,6 +63,7 @@ export interface Route {
   coordinates: [number, number][];
   carId: string;
   userId: number;
+  alternativeRoute?: AlternativeRoute;
 }
 
 export interface CreateRouteData {
