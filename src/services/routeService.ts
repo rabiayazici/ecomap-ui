@@ -1,9 +1,11 @@
 import api from './api.config';
 import type { Route, CreateRouteData, CalculateRouteRequest } from '../types/api.types';
 import polyline from '@mapbox/polyline';
+import axios from 'axios';
 
 // Remove the direct Python API URL since we'll proxy through Spring Boot
 // const PYTHON_API_URL = 'http://localhost:5000';
+const PYTHON_API_URL = 'http://localhost:5001/api';
 
 export const routeService = {
   getUserRoutes: async (userId: number): Promise<Route[]> => {
@@ -76,13 +78,29 @@ export const routeService = {
 
       console.log('Sending eco-route calculation request:', ecoRouteRequest);
 
-      const ecoRouteResponse = await api.post('/routes/calculate-eco-route', ecoRouteRequest);
+      const ecoRouteResponse = await fetch(`${PYTHON_API_URL}/calculate-eco-route`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(ecoRouteRequest)
+      });
       
-      if (!ecoRouteResponse.data) {
-        throw new Error('Failed to calculate eco-route');
+      if (!ecoRouteResponse.ok) {
+        const errorText = await ecoRouteResponse.text();
+        throw new Error(`Backend error (${ecoRouteResponse.status}): ${errorText}`);
+      }
+      
+      const ecoRouteData = await ecoRouteResponse.json();
+      
+      if (!ecoRouteData || !ecoRouteData.eco_route || !ecoRouteData.shortest_route) {
+        throw new Error('Invalid response format from eco-route calculation');
       }
 
-      const ecoRouteData = ecoRouteResponse.data;
+      if (!Array.isArray(ecoRouteData.eco_route.coordinates) || !Array.isArray(ecoRouteData.shortest_route.coordinates)) {
+        throw new Error('Invalid coordinates format in route calculation response');
+      }
+      
       console.log('Eco-route calculation response:', ecoRouteData);
 
       // Calculate distances and durations
