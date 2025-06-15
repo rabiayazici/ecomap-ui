@@ -1,11 +1,13 @@
 import api from './api.config';
-import type { Route, CreateRouteData, CalculateRouteRequest } from '../types/api.types';
+import type { Route, CreateRouteData, CalculateRouteRequest, RouteCalculationResponse } from '../types/api.types';
 import polyline from '@mapbox/polyline';
 import axios from 'axios';
 
 // Remove the direct Python API URL since we'll proxy through Spring Boot
 // const PYTHON_API_URL = 'http://localhost:5000';
 const PYTHON_API_URL = 'http://localhost:5001/api';
+
+
 
 export const routeService = {
   getUserRoutes: async (userId: number): Promise<Route[]> => {
@@ -91,7 +93,7 @@ export const routeService = {
         throw new Error(`Backend error (${ecoRouteResponse.status}): ${errorText}`);
       }
       
-      const ecoRouteData = await ecoRouteResponse.json();
+      const ecoRouteData = await ecoRouteResponse.json() as RouteCalculationResponse;
       
       if (!ecoRouteData || !ecoRouteData.eco_route || !ecoRouteData.shortest_route) {
         throw new Error('Invalid response format from eco-route calculation');

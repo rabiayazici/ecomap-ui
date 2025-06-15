@@ -66,6 +66,16 @@ export interface Route {
   alternativeRoute?: AlternativeRoute;
 }
 
+
+export interface RouteCoordinates {
+  coordinates: [number, number][];
+}
+
+export interface RouteCalculationResponse {
+  eco_route: RouteCoordinates;
+  shortest_route: RouteCoordinates;
+}
+
 export interface CreateRouteData {
   startCoordinate: [number, number];
   endCoordinate: [number, number];
