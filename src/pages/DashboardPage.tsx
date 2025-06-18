@@ -19,7 +19,7 @@ function DashboardPage() {
   const [loadingRoutes, setLoadingRoutes] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [showVehicleForm, setShowVehicleForm] = useState(false);
   const [editingCar, setEditingCar] = useState<Car | null>(null);
   const [formData, setFormData] = useState({
     name: '',
@@ -89,7 +89,7 @@ function DashboardPage() {
       } else {
         await carService.createCar(carData);
       }
-      setIsModalOpen(false);
+      setShowVehicleForm(false);
       setEditingCar(null);
       setFormData({
         name: '',
@@ -125,7 +125,7 @@ function DashboardPage() {
       drive_type: car.drive_type,
       fuelConsumption: car.fuelConsumption.toString(),
     });
-    setIsModalOpen(true);
+    setShowVehicleForm(true);
   };
 
   const handleDelete = async (carId: string) => {
@@ -179,10 +179,12 @@ function DashboardPage() {
         </div>
       </header>
 
-      {/* Welcome Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome back, {user?.name}!</h1>
-        <p className="text-lg text-gray-600">Ready to plan your next journey? Let's get you where you need to go.</p>
+      {/* Welcome Section with green gradient background */}
+      <section className="w-full bg-gradient-to-b from-green-100 to-white text-center py-16 px-4">
+        <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+          Welcome back, <span className="text-green-600">{user?.name}!</span>
+        </h1>
+        <p className="text-lg text-gray-700 max-w-2xl mx-auto">Ready to plan your next journey? Let's get you where you need to go.</p>
       </section>
 
       {/* Main Content Area with Cards */}
@@ -229,7 +231,7 @@ function DashboardPage() {
                         drive_type: '',
                         fuelConsumption: '',
                       });
-                      setIsModalOpen(true);
+                      setShowVehicleForm(true);
                     }}
                     className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors"
                   >
@@ -280,13 +282,140 @@ function DashboardPage() {
                         drive_type: '',
                         fuelConsumption: '',
                       });
-                      setIsModalOpen(true);
+                      setShowVehicleForm(true);
                     }}
                     className="w-full bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors"
                   >
                     + Add Vehicle
                   </button>
                 </div>
+              )}
+              {/* Inline Vehicle Form */}
+              {showVehicleForm && (
+                <form onSubmit={handleSubmit} className="space-y-4 bg-gray-50 p-4 rounded-md mt-4">
+                  <h2 className="text-lg font-bold mb-2">{editingCar ? 'Edit Vehicle' : 'Add New Vehicle'}</h2>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Name</label>
+                    <input
+                      type="text"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleInputChange}
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Model</label>
+                    <input
+                      type="text"
+                      name="model"
+                      value={formData.model}
+                      onChange={handleInputChange}
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Engine Type</label>
+                    <input
+                      type="text"
+                      name="engine_type"
+                      value={formData.engine_type}
+                      onChange={handleInputChange}
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Year</label>
+                    <input
+                      type="number"
+                      name="year"
+                      value={formData.year}
+                      onChange={handleInputChange}
+                      min="1900"
+                      max={new Date().getFullYear()}
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Fuel Type</label>
+                    <input
+                      type="text"
+                      name="fuel_type"
+                      value={formData.fuel_type}
+                      onChange={handleInputChange}
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Engine Displacement (L)</label>
+                    <input
+                      type="number"
+                      name="engine_displacement"
+                      value={formData.engine_displacement}
+                      onChange={handleInputChange}
+                      step="0.1"
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Transmission</label>
+                    <input
+                      type="text"
+                      name="transmission"
+                      value={formData.transmission}
+                      onChange={handleInputChange}
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Drive Type</label>
+                    <input
+                      type="text"
+                      name="drive_type"
+                      value={formData.drive_type}
+                      onChange={handleInputChange}
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Fuel Consumption (L/100km)</label>
+                    <input
+                      type="number"
+                      name="fuelConsumption"
+                      value={formData.fuelConsumption}
+                      onChange={handleInputChange}
+                      step="0.1"
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
+                      required
+                    />
+                  </div>
+                  <div className="flex justify-end space-x-2 mt-6">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowVehicleForm(false);
+                        setEditingCar(null);
+                      }}
+                      className="px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+                    >
+                      {editingCar ? 'Save Changes' : 'Add Vehicle'}
+                    </button>
+                  </div>
+                </form>
               )}
             </div>
           </div>
@@ -335,137 +464,6 @@ function DashboardPage() {
           </div>
         </div>
       </div>
-
-      {/* Edit/Add Vehicle Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h2 className="text-xl font-bold mb-4">
-              {editingCar ? 'Edit Vehicle' : 'Add New Vehicle'}
-            </h2>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Name</label>
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Model</label>
-                <input
-                  type="text"
-                  name="model"
-                  value={formData.model}
-                  onChange={handleInputChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Engine Type</label>
-                <input
-                  type="text"
-                  name="engine_type"
-                  value={formData.engine_type}
-                  onChange={handleInputChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Year</label>
-                <input
-                  type="number"
-                  name="year"
-                  value={formData.year}
-                  onChange={handleInputChange}
-                  min="1900"
-                  max={new Date().getFullYear()}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Fuel Type</label>
-                <input
-                  type="text"
-                  name="fuel_type"
-                  value={formData.fuel_type}
-                  onChange={handleInputChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Engine Displacement (L)</label>
-                <input
-                  type="number"
-                  name="engine_displacement"
-                  value={formData.engine_displacement}
-                  onChange={handleInputChange}
-                  step="0.1"
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Transmission</label>
-                <input
-                  type="text"
-                  name="transmission"
-                  value={formData.transmission}
-                  onChange={handleInputChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Drive Type</label>
-                <input
-                  type="text"
-                  name="drive_type"
-                  value={formData.drive_type}
-                  onChange={handleInputChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Fuel Consumption (L/100km)</label>
-                <input
-                  type="number"
-                  name="fuelConsumption"
-                  value={formData.fuelConsumption}
-                  onChange={handleInputChange}
-                  step="0.1"
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
-                  required
-                />
-              </div>
-              <div className="flex justify-end space-x-2 mt-6">
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
-                >
-                  {editingCar ? 'Save Changes' : 'Add Vehicle'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

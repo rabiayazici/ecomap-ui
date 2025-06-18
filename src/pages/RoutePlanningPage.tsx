@@ -288,7 +288,7 @@ function RoutePlanningPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-b from-green-50 to-white">
       {/* Header */}
       <header className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
@@ -444,35 +444,48 @@ function RoutePlanningPage() {
             <div className="bg-white rounded-lg shadow-md overflow-hidden">
               <div ref={mapContainer} className="w-full h-[600px]" />
             </div>
+            {route && alternativeRoute && (
+              <div className="max-w-3xl mx-auto mt-10">
+                <div className="bg-white rounded-lg shadow-md p-6">
+                  <h3 className="text-lg font-semibold mb-4 text-gray-900">Route Comparison</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="bg-green-50 rounded-md p-4 border border-green-200">
+                      <h4 className="font-semibold text-green-700 mb-2 flex items-center">
+                        Eco-friendly Route
+                        <span className="ml-2 inline-block bg-green-200 text-green-800 text-xs px-2 py-0.5 rounded">Recommended</span>
+                      </h4>
+                      <div className="space-y-1 text-gray-700">
+                        <div><span className="font-medium">Distance:</span> {(route.distance / 1000).toFixed(1)} km</div>
+                        <div><span className="font-medium">Duration:</span> {Math.round(route.duration / 60)} minutes</div>
+                        <div><span className="font-medium">Fuel Cost:</span> ${route.fuelCost.toFixed(2)}</div>
+                      </div>
+                    </div>
+                    <div className="bg-blue-50 rounded-md p-4 border border-blue-200">
+                      <h4 className="font-semibold text-blue-700 mb-2">Shortest Route</h4>
+                      <div className="space-y-1 text-gray-700">
+                        <div><span className="font-medium">Distance:</span> {(alternativeRoute.distance / 1000).toFixed(1)} km</div>
+                        <div><span className="font-medium">Duration:</span> {Math.round(alternativeRoute.duration / 60)} minutes</div>
+                        <div><span className="font-medium">Fuel Cost:</span> ${alternativeRoute.fuelCost.toFixed(2)}</div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mt-6 flex justify-center">
+                    <button
+                      className={`relative overflow-hidden px-6 py-2 rounded-md text-white font-medium focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-150
+                        ${showAlternativeRoute
+                          ? 'bg-gradient-to-r from-green-400 to-green-600 hover:from-green-500 hover:to-green-700'
+                          : 'bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:from-blue-600 hover:to-blue-800'}
+                      `}
+                      onClick={toggleAlternativeRoute}
+                    >
+                      {showAlternativeRoute ? 'Hide' : 'Show'} Shortest Route
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
-
-        {/* Add route comparison section */}
-        {route && alternativeRoute && (
-          <div className="route-comparison">
-            <h3>Route Comparison</h3>
-            <div className="route-types">
-              <div className="eco-route">
-                <h4>Eco-friendly Route</h4>
-                <p>Distance: {(route.distance / 1000).toFixed(1)} km</p>
-                <p>Duration: {Math.round(route.duration / 60)} minutes</p>
-                <p>Fuel Cost: ${route.fuelCost.toFixed(2)}</p>
-              </div>
-              <div className="shortest-route">
-                <h4>Shortest Route</h4>
-                <p>Distance: {(alternativeRoute.distance / 1000).toFixed(1)} km</p>
-                <p>Duration: {Math.round(alternativeRoute.duration / 60)} minutes</p>
-                <p>Fuel Cost: ${alternativeRoute.fuelCost.toFixed(2)}</p>
-              </div>
-            </div>
-            <button 
-              className="toggle-route-btn"
-              onClick={toggleAlternativeRoute}
-            >
-              {showAlternativeRoute ? 'Hide' : 'Show'} Shortest Route
-            </button>
-          </div>
-        )}
       </div>
     </div>
   );
